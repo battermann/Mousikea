@@ -4,10 +4,6 @@ module Mousikea.Midi.MEvent exposing
     , MEvent
     , PTime
     , Performance
-    , applyControls
-    , merge
-    , musicToMEvents
-    , noteToMEvent
     , perform1
     , perform1Dur
     , performAbsPitch
@@ -15,11 +11,44 @@ module Mousikea.Midi.MEvent exposing
     , performNote1
     , performPitch
     , performPitchVol
-    , phraseToMEvents
     )
 
-import Mousikea.Music exposing (..)
-import Mousikea.Types exposing (..)
+import Mousikea.Music
+    exposing
+        ( absPitch
+        , fromAbsPitch
+        , fromAbsPitchVolume
+        , fromNote1
+        , fromPitch
+        , fromPitchVolume
+        , qn
+        , scaleDurations
+        , shiftPitches1
+        , zero
+        )
+import Mousikea.Types
+    exposing
+        ( AbsPitch
+        , Articulation(..)
+        , Control(..)
+        , Dur
+        , Dynamic(..)
+        , InstrumentName(..)
+        , Mode(..)
+        , Music(..)
+        , Music1
+        , Note1
+        , NoteAttribute(..)
+        , NoteHead(..)
+        , Ornament(..)
+        , PhraseAttribute(..)
+        , Pitch
+        , PitchClass(..)
+        , Primitive(..)
+        , StdLoudness(..)
+        , Tempo(..)
+        , Volume
+        )
 import Mousikea.Util.Ratio as Ratio exposing (Rational)
 
 
@@ -223,7 +252,7 @@ phraseToMEvents ctx pas m =
                     phraseToMEvents ctx t m
 
                 loud x =
-                    phraseToMEvents ctx (Dyn (Loudness x) :: t) m
+                    phraseToMEvents ctx (Dyn (Loudness (Ratio.fromInt x)) :: t) m
 
                 stretch x =
                     let
@@ -287,12 +316,83 @@ phraseToMEvents ctx pas m =
                                             )
                                         )
                                         (Ratio.fromInt ev.eVol)
-                                        |> Ratio.toFloat
-                                        |> round
+                                        |> Ratio.round
                             }
                     in
                     ( List.map upd pf, dur )
             in
             case h of
-                _ ->
-                    Debug.todo ""
+                Dyn (Accent x) ->
+                    ( List.map (\e -> { e | eVol = Ratio.multiply x (Ratio.fromInt e.eVol) |> Ratio.round }) pf, dur )
+
+                Dyn (StdLoudness l) ->
+                    case l of
+                        PPP ->
+                            loud 40
+
+                        PP ->
+                            loud 50
+
+                        P ->
+                            loud 60
+
+                        MP ->
+                            loud 70
+
+                        SF ->
+                            loud 80
+
+                        MF ->
+                            loud 90
+
+                        NF ->
+                            loud 100
+
+                        FF ->
+                            loud 110
+
+                        FFF ->
+                            loud 120
+
+                Dyn (Loudness x) ->
+                    phraseToMEvents { ctx | mcVol = Ratio.round x } t m
+
+                Dyn (Crescendo x) ->
+                    inflate x
+
+                Dyn (Diminuendo x) ->
+                    inflate (Ratio.multiply (Ratio.fromInt -1) x)
+
+                Tmp (Ritardando x) ->
+                    stretch x
+
+                Tmp (Accelerando x) ->
+                    stretch (Ratio.multiply (Ratio.fromInt -1) x)
+
+                Art (Staccato x) ->
+                    ( List.map (\e -> { e | eDur = Ratio.multiply x e.eDur }) pf, dur )
+
+                Art (Legato x) ->
+                    ( List.map (\e -> { e | eDur = Ratio.multiply x e.eDur }) pf, dur )
+
+                Art (Slurred x) ->
+                    let
+                        lastStartTime =
+                            List.foldr (\e acc -> Ratio.max e.eTime acc) zero pf
+
+                        setDur e =
+                            if Ratio.lt e.eTime lastStartTime then
+                                { e | eDur = Ratio.multiply x e.eDur }
+
+                            else
+                                e
+                    in
+                    ( List.map setDur pf, dur )
+
+                Art _ ->
+                    -- not supported
+                    ( pf, dur )
+
+                Orn _ ->
+                    -- not supported
+                    ( pf, dur )
