@@ -1,10 +1,19 @@
-module Main exposing (main)
+port module Main exposing (main)
 
 import Browser
-import Html exposing (Html, div, h1, img, text)
-import Html.Attributes exposing (src)
-import Mousikea.Examples
-import Mousikea.Midi.MEvent
+import Html exposing (Html)
+import Html.Events
+import Json.Encode as Encode exposing (Value)
+import Mousikea.Examples as Example
+import Mousikea.Midi.Encoder as Encoder
+import Mousikea.Midi.MEvent as Perf exposing (MEvent, Performance)
+
+
+
+---- PORTS ----
+
+
+port play : Value -> Cmd msg
 
 
 
@@ -12,12 +21,12 @@ import Mousikea.Midi.MEvent
 
 
 type alias Model =
-    {}
+    Performance
 
 
 init : ( Model, Cmd Msg )
 init =
-    ( {}, Cmd.none )
+    ( Example.childSong6 |> Perf.performPitch, Cmd.none )
 
 
 
@@ -25,14 +34,14 @@ init =
 
 
 type Msg
-    = NoOp
+    = Play
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        NoOp ->
-            ( model, Cmd.none )
+        Play ->
+            ( model, play (Encode.list Encoder.mEvent model) )
 
 
 
@@ -41,10 +50,8 @@ update msg model =
 
 view : Model -> Html Msg
 view _ =
-    div []
-        [ img [ src "/logo.svg" ] []
-        , h1 [] [ text "Your Elm App is working!" ]
-        ]
+    Html.div []
+        [ Html.button [ Html.Events.onClick Play ] [ Html.text "Play!" ] ]
 
 
 

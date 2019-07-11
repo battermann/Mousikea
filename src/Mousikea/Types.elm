@@ -83,7 +83,7 @@ type Primitive a
     = Note Dur a
     | Rest Dur
 
-
+    
 type Music a
     = Prim (Primitive a) --  primitive value
     | Seq (Music a) (Music a) --  sequential composition
