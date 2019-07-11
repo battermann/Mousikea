@@ -141,7 +141,7 @@ import Mousikea.Types
         , Volume
         )
 import Mousikea.Types.PercussionSound as Perc exposing (PercussionSound)
-import Mousikea.Util.Ratio as Ratio exposing (Rational)
+import Mousikea.Util.Ratio as Ratio exposing (Rational, add, div, fromInt, isZero, max, min, mul, over, sub)
 
 
 
@@ -389,7 +389,7 @@ bss octave dur =
 
 bn : Dur
 bn =
-    Ratio.fromInt 2
+    fromInt 2
 
 
 {-| brevis rests
@@ -401,7 +401,7 @@ bnr =
 
 wn : Dur
 wn =
-    Ratio.fromInt 1
+    fromInt 1
 
 
 {-| whole note rest
@@ -413,7 +413,7 @@ wnr =
 
 hn : Dur
 hn =
-    Ratio.over 1 2
+    over 1 2
 
 
 {-| half note rest
@@ -425,7 +425,7 @@ hnr =
 
 qn : Dur
 qn =
-    Ratio.over 1 4
+    over 1 4
 
 
 {-| quarter note rest
@@ -437,7 +437,7 @@ qnr =
 
 en : Dur
 en =
-    Ratio.over 1 8
+    over 1 8
 
 
 {-| eighth note rest
@@ -449,7 +449,7 @@ enr =
 
 sn : Dur
 sn =
-    Ratio.over 1 16
+    over 1 16
 
 
 {-| sixteenth note rest
@@ -461,7 +461,7 @@ snr =
 
 tn : Dur
 tn =
-    Ratio.over 1 32
+    over 1 32
 
 
 {-| thirty-second note rest
@@ -473,7 +473,7 @@ tnr =
 
 sfn : Dur
 sfn =
-    Ratio.over 1 64
+    over 1 64
 
 
 {-| sixty-fourth note rest
@@ -485,7 +485,7 @@ sfnr =
 
 dwn : Dur
 dwn =
-    Ratio.over 3 2
+    over 3 2
 
 
 {-| dotted whole note rest
@@ -497,7 +497,7 @@ dwnr =
 
 dhn : Dur
 dhn =
-    Ratio.over 3 4
+    over 3 4
 
 
 {-| dotted half note rest
@@ -509,7 +509,7 @@ dhnr =
 
 dqn : Dur
 dqn =
-    Ratio.over 3 8
+    over 3 8
 
 
 {-| dotted quarter note rest
@@ -521,7 +521,7 @@ dqnr =
 
 den : Dur
 den =
-    Ratio.over 3 16
+    over 3 16
 
 
 {-| dotted eighth note rest
@@ -533,7 +533,7 @@ denr =
 
 dsn : Dur
 dsn =
-    Ratio.over 3 32
+    over 3 32
 
 
 {-| dotted sixteenth note rest
@@ -545,7 +545,7 @@ dsnr =
 
 dtn : Dur
 dtn =
-    Ratio.over 3 64
+    over 3 64
 
 
 {-| dotted thirty-second note rest
@@ -557,7 +557,7 @@ dtnr =
 
 ddhn : Dur
 ddhn =
-    Ratio.over 7 8
+    over 7 8
 
 
 {-| double-dotted half note rest
@@ -569,7 +569,7 @@ ddhnr =
 
 ddqn : Dur
 ddqn =
-    Ratio.over 7 16
+    over 7 16
 
 
 {-| double-dotted quarter note rest
@@ -581,7 +581,7 @@ ddqnr =
 
 dden : Dur
 dden =
-    Ratio.over 7 32
+    over 7 32
 
 
 {-| double-dotted eighth note rest
@@ -593,7 +593,7 @@ ddenr =
 
 zero : Dur
 zero =
-    Ratio.fromInt 0
+    fromInt 0
 
 
 {-| a rest with duration zero
@@ -935,10 +935,10 @@ retro m =
                     duration m2
             in
             if Ratio.gt d1 d2 then
-                Par (retro m1) (Seq (rest (Ratio.subtract d1 d2)) (retro m2))
+                Par (retro m1) (Seq (rest (sub d1 d2)) (retro m2))
 
             else
-                Par (Seq (rest (Ratio.subtract d2 d1)) (retro m1)) (retro m2)
+                Par (Seq (rest (sub d2 d1)) (retro m1)) (retro m2)
 
 
 retroInvert : Music Pitch -> Music Pitch
@@ -961,13 +961,13 @@ duration m =
             dur
 
         Seq m1 m2 ->
-            Ratio.add (duration m1) (duration m2)
+            add (duration m1) (duration m2)
 
         Par m1 m2 ->
-            Ratio.max (duration m1) (duration m2)
+            max (duration m1) (duration m2)
 
         Modify (Tempo r) m_ ->
-            Ratio.divide (duration m_) r
+            div (duration m_) r
 
         Modify _ m_ ->
             duration m_
@@ -983,7 +983,7 @@ cut dur m =
             Prim (Note oldD p) ->
                 let
                     dur_ =
-                        Ratio.max (Ratio.min oldD dur) zero
+                        max (min oldD dur) zero
                 in
                 if Ratio.gt dur_ zero then
                     note dur_ p
@@ -992,7 +992,7 @@ cut dur m =
                     empty
 
             Prim (Rest oldD) ->
-                rest (Ratio.max (Ratio.min oldD dur) zero)
+                rest (max (min oldD dur) zero)
 
             Par m1 m2 ->
                 Par (cut dur m1) (cut dur m2)
@@ -1003,12 +1003,12 @@ cut dur m =
                         cut dur m1
 
                     music2 =
-                        cut (Ratio.subtract dur (duration music1)) m2
+                        cut (sub dur (duration music1)) m2
                 in
                 Seq music1 music2
 
             Modify (Tempo r) m_ ->
-                tempo r (cut (Ratio.multiply dur r) m_)
+                tempo r (cut (mul dur r) m_)
 
             Modify control m_ ->
                 Modify control (cut dur m_)
@@ -1024,7 +1024,7 @@ remove dur m =
             Prim (Note oldD p) ->
                 let
                     d_ =
-                        Ratio.max (Ratio.subtract oldD dur) zero
+                        max (sub oldD dur) zero
                 in
                 if Ratio.gt d_ zero then
                     note d_ p
@@ -1033,7 +1033,7 @@ remove dur m =
                     empty
 
             Prim (Rest oldD) ->
-                rest (Ratio.max (Ratio.subtract oldD dur) zero)
+                rest (max (sub oldD dur) zero)
 
             Par m1 m2 ->
                 Par (remove dur m1) (remove dur m2)
@@ -1044,12 +1044,12 @@ remove dur m =
                         remove dur m1
 
                     m_2 =
-                        remove (Ratio.subtract dur (duration m1)) m2
+                        remove (sub dur (duration m1)) m2
                 in
                 Seq m_1 m_2
 
             Modify (Tempo r) m_ ->
-                tempo r (remove (Ratio.multiply dur r) m_)
+                tempo r (remove (mul dur r) m_)
 
             Modify control m_ ->
                 Modify control (remove dur m_)
@@ -1148,10 +1148,10 @@ scaleDurations : Rational -> Music a -> Music a
 scaleDurations r m =
     case m of
         Prim (Note dur p) ->
-            note (Ratio.divide dur r) p
+            note (div dur r) p
 
         Prim (Rest dur) ->
-            rest (Ratio.divide dur r)
+            rest (div dur r)
 
         Seq m1 m2 ->
             Seq (scaleDurations r m1) (scaleDurations r m2)
