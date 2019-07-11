@@ -44,7 +44,7 @@ module Mousikea.Music exposing
     , duration
     , dwn
     , dwnr
-    , e
+    , e_
     , ef
     , eff
     , empty
@@ -272,8 +272,8 @@ ef octave dur =
     note dur ( Ef, octave )
 
 
-e : Octave -> Dur -> Music Pitch
-e octave dur =
+e_ : Octave -> Dur -> Music Pitch
+e_ octave dur =
     note dur ( E, octave )
 
 

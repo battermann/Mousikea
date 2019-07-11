@@ -3,6 +3,7 @@ module Main exposing (main)
 import Browser
 import Html exposing (Html, div, h1, img, text)
 import Html.Attributes exposing (src)
+import Mousikea.Examples
 import Mousikea.Midi.MEvent
 
 

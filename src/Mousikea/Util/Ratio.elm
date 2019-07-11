@@ -7,6 +7,7 @@ module Mousikea.Util.Ratio exposing
     , isZero, isInfinite, round, floor, ceiling, truncate
     , numerator, denominator, split
     , gcd, invert, toFloat
+    , div, divByInt, divIntBy, mul, mulByInt, sub, toRational
     )
 
 {-| A simple module providing a ratio type for rational numbers
@@ -322,3 +323,42 @@ truncate =
 rel : (Int -> Int -> Bool) -> Rational -> Rational -> Bool
 rel relop a b =
     relop (numerator a * denominator b) (numerator b * denominator a)
+
+
+
+---- Helper
+
+
+div : Rational -> Rational -> Rational
+div =
+    divide
+
+
+mul : Rational -> Rational -> Rational
+mul =
+    multiply
+
+
+sub : Rational -> Rational -> Rational
+sub =
+    subtract
+
+
+toRational : Int -> Rational
+toRational =
+    fromInt
+
+
+mulByInt : Rational -> Int -> Rational
+mulByInt =
+    multiplyByInt
+
+
+divByInt : Rational -> Int -> Rational
+divByInt =
+    divideByInt
+
+
+divIntBy : Int -> Rational -> Rational
+divIntBy =
+    divideIntBy
