@@ -5,6 +5,7 @@ install:
 
 script:
   - elm-format src/ --validate
+  - npm install
   - elm-app build
 
 deploy:
@@ -12,3 +13,4 @@ deploy:
   project: ./build/
   domain: elm-euterpea.surge.sh
   skip_cleanup: true
+  
