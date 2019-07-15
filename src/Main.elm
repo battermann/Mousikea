@@ -1,19 +1,14 @@
-port module Main exposing (main)
+module Main exposing (main)
 
 import Browser
+import Dict exposing (Dict)
 import Html exposing (Html)
 import Html.Events
 import Json.Encode as Encode exposing (Value)
-import Mousikea.Examples as Example
+import Mousikea.Examples.ChildrenSong6 as ChildrenSong
 import Mousikea.Midi.Encoder as Encoder
 import Mousikea.Midi.MEvent as Perf exposing (MEvent, Performance)
-
-
-
----- PORTS ----
-
-
-port play : Value -> Cmd msg
+import WebAudioFont
 
 
 
@@ -21,12 +16,15 @@ port play : Value -> Cmd msg
 
 
 type alias Model =
-    Performance
+    Dict String Performance
 
 
 init : ( Model, Cmd Msg )
 init =
-    ( Example.childSong6 |> Perf.performPitch, Cmd.none )
+    ( Dict.empty
+        |> Dict.insert "" (ChildrenSong.childSong6 |> Perf.performPitch)
+    , Cmd.none
+    )
 
 
 
@@ -34,14 +32,14 @@ init =
 
 
 type Msg
-    = Play
+    = Play String
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        Play ->
-            ( model, play (Encode.list Encoder.mEvent model) )
+        Play key ->
+            ( model, model |> Dict.get key |> Maybe.map WebAudioFont.queueWavTable |> Maybe.withDefault Cmd.none )
 
 
 
@@ -49,9 +47,11 @@ update msg model =
 
 
 view : Model -> Html Msg
-view _ =
-    Html.div []
-        [ Html.button [ Html.Events.onClick Play ] [ Html.text "Play!" ] ]
+view model =
+    model
+        |> Dict.keys
+        |> List.map (\key -> Html.button [ Html.Events.onClick (Play key) ] [ Html.text "Play!" ])
+        |> Html.div []
 
 
 

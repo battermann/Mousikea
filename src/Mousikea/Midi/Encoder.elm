@@ -7,15 +7,6 @@ import Mousikea.Util.Ratio as Ratio
 
 
 
--- { eTime : PTime
---     , eInst : InstrumentName
---     , ePitch : AbsPitch
---     , eDur : DurT
---     , eVol : Volume
---     , eParams : List Float
---     }
-
-
 mEvent : MEvent -> Value
 mEvent { eTime, eInst, ePitch, eDur, eVol, eParams } =
     Encode.object

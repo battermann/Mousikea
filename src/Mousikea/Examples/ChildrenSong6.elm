@@ -1,4 +1,4 @@
-module Mousikea.Examples exposing (childSong6)
+module Mousikea.Examples.ChildrenSong6 exposing (childSong6)
 
 import Mousikea.Music exposing (..)
 import Mousikea.Types
