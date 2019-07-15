@@ -8,6 +8,7 @@
   },
   "dependencies": {},
   "devDependencies": {
+    "@fortawesome/fontawesome-free": "^5.9.0",
     "webaudiofont": "^2.5.47"
   },
   "scripts": {

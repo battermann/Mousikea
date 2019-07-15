@@ -1,6 +1,9 @@
 import { Elm } from './Main.elm'
 import registerServiceWorker from './registerServiceWorker'
 import 'webaudiofont'
+import '@fortawesome/fontawesome-free/js/fontawesome'
+import '@fortawesome/fontawesome-free/js/solid'
+import '@fortawesome/fontawesome-free/js/regular'
 
 const app = Elm.Main.init({
   node: document.getElementById('root')
@@ -9,6 +12,10 @@ const app = Elm.Main.init({
 const AudioContextFunc = window.AudioContext || window.webkitAudioContext
 const audioContext = new AudioContextFunc()
 const player = new WebAudioFontPlayer()
+
+app.ports.stop.subscribe(function () {
+  player.cancelQueue(audioContext)
+})
 
 app.ports.play.subscribe(function (data) {
   data.instruments.forEach(function (instrument) {

@@ -3,9 +3,11 @@ module Main exposing (main)
 import Bootstrap.Button as Button
 import Bootstrap.CDN as CDN
 import Bootstrap.Grid as Grid
+import Bootstrap.Utilities.Spacing as Spacing
 import Browser
 import Dict exposing (Dict)
 import Html exposing (Html)
+import Html.Attributes
 import Html.Events
 import Json.Encode as Encode exposing (Value)
 import Mousikea.Examples.ChildrenSong6 as ChildrenSong
@@ -36,6 +38,7 @@ init =
 
 type Msg
     = Play String
+    | Stop
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -43,6 +46,9 @@ update msg model =
     case msg of
         Play key ->
             ( model, model |> Dict.get key |> Maybe.map WebAudioFont.queueWavTable |> Maybe.withDefault Cmd.none )
+
+        Stop ->
+            ( model, WebAudioFont.stop () )
 
 
 
@@ -62,7 +68,8 @@ view model =
                         (\key ->
                             Html.div []
                                 [ Html.h3 [] [ Html.text key ]
-                                , Button.button [ Button.primary, Button.onClick (Play key) ] [ Html.text "Play" ]
+                                , Button.button [ Button.primary, Button.onClick (Play key) ] [ Html.i [ Html.Attributes.class "fas fa-play" ] [] ]
+                                , Button.button [ Button.attrs [ Spacing.ml2 ], Button.primary, Button.onClick Stop ] [ Html.i [ Html.Attributes.class "fas fa-stop" ] [] ]
                                 ]
                         )
                     |> Html.div []

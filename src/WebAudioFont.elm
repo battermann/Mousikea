@@ -1,4 +1,4 @@
-port module WebAudioFont exposing (queueWavTable)
+port module WebAudioFont exposing (queueWavTable, stop)
 
 import Json.Encode exposing (Value)
 import List.Extra
@@ -8,6 +8,9 @@ import Mousikea.Util.Ratio as Ratio
 
 
 port play : Value -> Cmd msg
+
+
+port stop : () -> Cmd msg
 
 
 queueWavTable : Performance -> Cmd msg
