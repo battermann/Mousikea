@@ -1,5 +1,8 @@
 module Main exposing (main)
 
+import Bootstrap.Button as Button
+import Bootstrap.CDN as CDN
+import Bootstrap.Grid as Grid
 import Browser
 import Dict exposing (Dict)
 import Html exposing (Html)
@@ -22,7 +25,7 @@ type alias Model =
 init : ( Model, Cmd Msg )
 init =
     ( Dict.empty
-        |> Dict.insert "" (ChildrenSong.childSong6 |> Perf.performPitch)
+        |> Dict.insert "Children's Songs No. 6 (Chick Corea)" (ChildrenSong.childSong6 |> Perf.performPitch)
     , Cmd.none
     )
 
@@ -48,10 +51,24 @@ update msg model =
 
 view : Model -> Html Msg
 view model =
-    model
-        |> Dict.keys
-        |> List.map (\key -> Html.button [ Html.Events.onClick (Play key) ] [ Html.text "Play!" ])
-        |> Html.div []
+    Grid.container []
+        [ CDN.stylesheet -- creates an inline style node with the Bootstrap CSS
+        , Grid.row []
+            [ Grid.col []
+                [ Html.h1 [] [ Html.text "Making Music with Elm" ]
+                , model
+                    |> Dict.keys
+                    |> List.map
+                        (\key ->
+                            Html.div []
+                                [ Html.h3 [] [ Html.text key ]
+                                , Button.button [ Button.primary, Button.onClick (Play key) ] [ Html.text "Play" ]
+                                ]
+                        )
+                    |> Html.div []
+                ]
+            ]
+        ]
 
 
 
