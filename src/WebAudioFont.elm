@@ -98,12 +98,12 @@ fromPerformance performance =
 
 
 fromMEvent : MEvent -> WebAudioFontEvent
-fromMEvent { eTime, eInst, ePitch, eDur, eVol, eParams } =
+fromMEvent { eTime, eInst, ePitch, eDur, eVol } =
     { time = Ratio.toFloat eTime
     , instrument =
         case eInst of
             Percussion ->
-                Perc (toInstrumentNumber eInst ePitch)
+                Perc (toInstrumentNumber eInst ePitch + 0)
 
             _ ->
                 Regular (toInstrumentNumber eInst ePitch)

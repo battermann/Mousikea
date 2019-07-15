@@ -8,12 +8,9 @@ import Browser
 import Dict exposing (Dict)
 import Html exposing (Html)
 import Html.Attributes
-import Html.Events
-import Json.Encode as Encode exposing (Value)
 import Mousikea.Examples.ChildrenSong6 as ChildrenSong
 import Mousikea.Examples.Drums as Drums
-import Mousikea.Midi.Encoder as Encoder
-import Mousikea.Midi.MEvent as Perf exposing (MEvent, Performance)
+import Mousikea.Midi.MEvent as Perf exposing (Performance)
 import WebAudioFont
 
 
@@ -28,8 +25,9 @@ type alias Model =
 init : ( Model, Cmd Msg )
 init =
     ( Dict.empty
-        |> Dict.insert "Children's Songs No. 6 (Chick Corea)" (ChildrenSong.childSong6 |> Perf.performPitch)
-        |> Dict.insert "Simple Drum Beat" (Drums.simpleBeat |> Perf.performPitch)
+        |> Dict.insert "1. Children's Songs No. 6 (Chick Corea)" (ChildrenSong.childSong6 |> Perf.performPitch)
+        |> Dict.insert "2. Simple Drum Beat" (Drums.simpleBeat |> Perf.performPitch)
+        |> Dict.insert "3. African Drum Beat" (Drums.africanDrumBeat |> Perf.performPitch)
     , Cmd.none
     )
 
@@ -70,8 +68,8 @@ view model =
                         (\key ->
                             Html.div []
                                 [ Html.h3 [ Spacing.mt5 ] [ Html.text key ]
-                                , Button.button [ Button.primary, Button.onClick (Play key) ] [ Html.i [ Html.Attributes.class "fas fa-play" ] [] ]
-                                , Button.button [ Button.attrs [ Spacing.ml2 ], Button.primary, Button.onClick Stop ] [ Html.i [ Html.Attributes.class "fas fa-stop" ] [] ]
+                                , Button.button [ Button.outlineSecondary, Button.onClick (Play key) ] [ Html.i [ Html.Attributes.class "fas fa-play" ] [] ]
+                                , Button.button [ Button.attrs [ Spacing.ml2 ], Button.outlineSecondary, Button.onClick Stop ] [ Html.i [ Html.Attributes.class "fas fa-stop" ] [] ]
                                 ]
                         )
                     |> Html.div []
