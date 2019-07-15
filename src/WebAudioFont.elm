@@ -3,7 +3,7 @@ port module WebAudioFont exposing (queueWavTable, stop)
 import Json.Encode exposing (Value)
 import List.Extra
 import Mousikea.Midi.MEvent exposing (MEvent, Performance)
-import Mousikea.Types exposing (InstrumentName(..))
+import Mousikea.Types exposing (AbsPitch, InstrumentName(..))
 import Mousikea.Util.Ratio as Ratio
 
 
@@ -20,13 +20,19 @@ queueWavTable =
 
 type alias WebAudioFontPerformance =
     { instruments : List Int
+    , drums : List Int
     , events : List WebAudioFontEvent
     }
 
 
+type Instrument
+    = Regular Int
+    | Perc Int
+
+
 type alias WebAudioFontEvent =
     { time : Float
-    , instrument : Int
+    , instrument : Instrument
     , pitch : Int
     , duration : Float
     , volume : Float
@@ -34,10 +40,11 @@ type alias WebAudioFontEvent =
 
 
 encode : WebAudioFontPerformance -> Value
-encode { instruments, events } =
+encode { instruments, events, drums } =
     Json.Encode.object
         [ ( "instruments", Json.Encode.list Json.Encode.int instruments )
         , ( "events", Json.Encode.list encodeEvent events )
+        , ( "drums", Json.Encode.list Json.Encode.int drums )
         ]
 
 
@@ -45,32 +52,69 @@ encodeEvent : WebAudioFontEvent -> Value
 encodeEvent { time, instrument, pitch, duration, volume } =
     Json.Encode.object
         [ ( "time", Json.Encode.float time )
-        , ( "instrument", Json.Encode.int instrument )
+        , ( "instrument", encodeInstrument instrument )
         , ( "pitch", Json.Encode.int pitch )
         , ( "duration", Json.Encode.float duration )
         , ( "volume", Json.Encode.float volume )
         ]
 
 
+encodeInstrument : Instrument -> Value
+encodeInstrument instrument =
+    case instrument of
+        Regular n ->
+            Json.Encode.object [ ( "type", Json.Encode.string "regular" ), ( "key", Json.Encode.int n ) ]
+
+        Perc n ->
+            Json.Encode.object [ ( "type", Json.Encode.string "percussion" ), ( "key", Json.Encode.int n ) ]
+
+
 fromPerformance : Performance -> WebAudioFontPerformance
 fromPerformance performance =
-    { instruments = performance |> List.map (.eInst >> toInstrumentNumber) |> List.Extra.unique
-    , events = performance |> List.map fromMEvent
+    let
+        events =
+            performance |> List.map fromMEvent
+
+        regular instr =
+            case instr of
+                Regular n ->
+                    [ n ]
+
+                _ ->
+                    []
+
+        perc instr =
+            case instr of
+                Perc n ->
+                    [ n ]
+
+                _ ->
+                    []
+    in
+    { instruments = events |> List.concatMap (.instrument >> regular) |> List.Extra.unique
+    , drums = events |> List.concatMap (.instrument >> perc) |> List.Extra.unique
+    , events = events
     }
 
 
 fromMEvent : MEvent -> WebAudioFontEvent
 fromMEvent { eTime, eInst, ePitch, eDur, eVol, eParams } =
     { time = Ratio.toFloat eTime
-    , instrument = toInstrumentNumber eInst
+    , instrument =
+        case eInst of
+            Percussion ->
+                Perc (toInstrumentNumber eInst ePitch)
+
+            _ ->
+                Regular (toInstrumentNumber eInst ePitch)
     , pitch = ePitch
     , duration = Ratio.toFloat eDur
     , volume = toFloat eVol / 127
     }
 
 
-toInstrumentNumber : InstrumentName -> Int
-toInstrumentNumber instrument =
+toInstrumentNumber : InstrumentName -> AbsPitch -> Int
+toInstrumentNumber instrument pitch =
     case instrument of
         AcousticGrandPiano ->
             0
@@ -455,6 +499,157 @@ toInstrumentNumber instrument =
 
         Gunshot ->
             1382
+
+        Percussion ->
+            toPercussionInstrumentNumber pitch
+
+        _ ->
+            0
+
+
+toPercussionInstrumentNumber : AbsPitch -> Int
+toPercussionInstrumentNumber pitch =
+    case pitch of
+        35 ->
+            0
+
+        36 ->
+            5
+
+        37 ->
+            10
+
+        38 ->
+            15
+
+        39 ->
+            20
+
+        40 ->
+            25
+
+        41 ->
+            30
+
+        42 ->
+            35
+
+        43 ->
+            40
+
+        44 ->
+            45
+
+        45 ->
+            50
+
+        46 ->
+            55
+
+        47 ->
+            60
+
+        48 ->
+            65
+
+        49 ->
+            70
+
+        50 ->
+            75
+
+        51 ->
+            80
+
+        52 ->
+            85
+
+        53 ->
+            90
+
+        54 ->
+            95
+
+        55 ->
+            100
+
+        56 ->
+            105
+
+        57 ->
+            110
+
+        58 ->
+            115
+
+        59 ->
+            120
+
+        60 ->
+            125
+
+        61 ->
+            130
+
+        62 ->
+            135
+
+        63 ->
+            140
+
+        64 ->
+            145
+
+        65 ->
+            150
+
+        66 ->
+            155
+
+        67 ->
+            160
+
+        68 ->
+            165
+
+        69 ->
+            170
+
+        70 ->
+            175
+
+        71 ->
+            180
+
+        72 ->
+            185
+
+        73 ->
+            190
+
+        74 ->
+            195
+
+        75 ->
+            200
+
+        76 ->
+            205
+
+        77 ->
+            210
+
+        78 ->
+            215
+
+        79 ->
+            220
+
+        80 ->
+            225
+
+        81 ->
+            230
 
         _ ->
             0

@@ -6,7 +6,6 @@ import Mousikea.Types exposing (InstrumentName(..))
 import Mousikea.Util.Ratio as Ratio
 
 
-
 mEvent : MEvent -> Value
 mEvent { eTime, eInst, ePitch, eDur, eVol, eParams } =
     Encode.object

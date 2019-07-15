@@ -11,6 +11,7 @@ import Html.Attributes
 import Html.Events
 import Json.Encode as Encode exposing (Value)
 import Mousikea.Examples.ChildrenSong6 as ChildrenSong
+import Mousikea.Examples.Drums as Drums
 import Mousikea.Midi.Encoder as Encoder
 import Mousikea.Midi.MEvent as Perf exposing (MEvent, Performance)
 import WebAudioFont
@@ -28,6 +29,7 @@ init : ( Model, Cmd Msg )
 init =
     ( Dict.empty
         |> Dict.insert "Children's Songs No. 6 (Chick Corea)" (ChildrenSong.childSong6 |> Perf.performPitch)
+        |> Dict.insert "Simple Drum Beat" (Drums.simpleBeat |> Perf.performPitch)
     , Cmd.none
     )
 
@@ -67,7 +69,7 @@ view model =
                     |> List.map
                         (\key ->
                             Html.div []
-                                [ Html.h3 [] [ Html.text key ]
+                                [ Html.h3 [ Spacing.mt5 ] [ Html.text key ]
                                 , Button.button [ Button.primary, Button.onClick (Play key) ] [ Html.i [ Html.Attributes.class "fas fa-play" ] [] ]
                                 , Button.button [ Button.attrs [ Spacing.ml2 ], Button.primary, Button.onClick Stop ] [ Html.i [ Html.Attributes.class "fas fa-stop" ] [] ]
                                 ]
