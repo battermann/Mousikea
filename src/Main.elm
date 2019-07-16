@@ -29,7 +29,7 @@ init =
         |> Dict.insert "1. Children's Songs No. 6 (Chick Corea)" (ChildrenSong.childSong6 |> Perf.performPitch)
         |> Dict.insert "2. Simple Drum Beat" (Drums.simpleBeat |> Perf.performPitch)
         |> Dict.insert "3. African Drum Beat" (Drums.africanDrumBeat |> Perf.performPitch)
-        |> Dict.insert "4. Sing A Song Of Song ()" (SingA.song |> Perf.performPitch)
+        |> Dict.insert "4. Sing A Song Of Song (Kenny Garrett)" (SingA.song |> Perf.performPitch)
     , Cmd.none
     )
 
