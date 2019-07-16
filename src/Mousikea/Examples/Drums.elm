@@ -25,6 +25,6 @@ africanDrumBeat =
     line [ perc RideBell qn, perc RideBell qn, perc RideBell qn, rest en, perc RideBell qn, perc RideBell qn, rest en ]
         |> Par (times 4 (perc AcousticBassDrum dqn))
         |> Par (times 6 (perc PedalHiHat qn))
-        |> Par (line [ rest qn, perc LowWoodBlock en, rest en, perc HighTom en |> times 2, rest qn, perc LowWoodBlock en, rest en, perc LowTom en |> times 2 ])
+        |> Par (line [ rest qn, perc SideStick en, rest en, perc HighTom en |> times 2, rest qn, perc SideStick en, rest en, perc LowTom en |> times 2 ])
         |> times 16
         |> tempo (Ratio.mul (Ratio.div dqn qn) (Ratio.over 120 120))
