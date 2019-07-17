@@ -3,9 +3,10 @@ module Mousikea.Examples.SingASongOfSong exposing (song)
 import Mousikea.Music exposing (..)
 import Mousikea.Types
     exposing
-        ( Dur
-        , InstrumentName(..)
+        ( InstrumentName(..)
         , Music(..)
+        , Music1
+        , NoteAttribute(..)
         , Pitch
         , Primitive(..)
         )
@@ -15,12 +16,10 @@ import Mousikea.Util.Ratio as Ratio
 
 drums : Music Pitch
 drums =
-    [ qn, qn, en, qn, qn, en, qn, en, qn, en ]
-        |> List.map (perc RideCymbal1)
-        |> line
-        |> Par ([ dqn, dqn, qn ] |> List.map (perc BassDrum1) |> line)
-        |> Par (Seq (line [ rest qn, perc SideStick dhn ]) (line [ perc SideStick dqn, perc HighTom dqn, perc LowTom qn ]))
-        |> Par (times 4 (perc PedalHiHat qn))
+    line (List.map (perc RideCymbal2) [ qn, qn, en, dqn, en, en, qn, qn, qn ])
+        |> Par (line [ perc AcousticBassDrum dqn, perc AcousticBassDrum dqn, perc AcousticBassDrum qn ])
+        |> Par (line [ rest wn, perc SideStick dqn, perc HighTom dqn, perc LowMidTom qn ])
+        |> Par (times 4 (perc PedalHiHat hn))
 
 
 bass1 : Music Pitch
@@ -41,23 +40,41 @@ bass =
 
 melody : Music Pitch
 melody =
-    line
-        [ line [ gs 4 qn, fs 4 en, gs 4 en, a 4 qn, gs 4 en, fs 4 en ]
-        , line [ rest en, e_ 4 dqn, b 3 en, d 4 en, e_ 4 (Ratio.add qn bn) ]
-        , line [ fs 4 qn, e_ 4 en, fs 4 en, g 4 qn, fs 4 en, e_ 4 en ]
-        , line [ rest en, d 4 dqn, b 3 en, d 4 en, e_ 4 (Ratio.add qn bn) ]
-        ]
+    let
+        ending1 =
+            e_ 4 (Ratio.add qn bn)
+
+        ending2 =
+            line [ e_ 4 (Ratio.add qn wn), rest hn, b 3 qn, d 4 qn ]
+
+        m1 ending =
+            line
+                [ line [ gs 4 qn, fs 4 en, gs 4 en, a 4 qn, gs 4 en, fs 4 en ]
+                , line [ rest en, e_ 4 dqn, b 3 en, d 4 en, e_ 4 (Ratio.add qn bn) ]
+                , line [ fs 4 qn, e_ 4 en, fs 4 en, g 4 qn, fs 4 en, e_ 4 en ]
+                , line [ rest en, d 4 dqn, b 3 en, d 4 en, ending ]
+                ]
+
+        m2 ending =
+            line
+                [ line [ e_ 4 wn, rest hn, rest en, e_ 4 qn, d 4 en ]
+                , line [ c 4 wn, rest hn, rest en, a 3 qn, c 4 en ]
+                , line [ d 4 wn, rest hn, rest en, b 3 qn, d 4 en ]
+                , line [ e_ 4 wn, rest hn, ending ]
+                ]
+    in
+    line [ m1 ending1, m1 ending2, m2 (line [ b 3 qn, d 4 qn ]), m2 (rest hn) ]
         |> instrument RhodesPiano
 
 
 rythm : Music Pitch
 rythm =
-    times 4 drums
-        |> Par bass
+    Par (times 4 drums) bass
 
 
-song : Music Pitch
+song : Music1
 song =
-    Seq rythm (Par rythm melody |> times 3)
+    Seq rythm (Par (times 4 rythm) melody |> times 2)
         |> times 2
         |> tempo (Ratio.mul (Ratio.div qn qn) (Ratio.over 200 120))
+        |> mMap (\p -> ( p, [ Volume 60 ] ))

@@ -10,14 +10,25 @@ const app = Elm.Main.init({
 })
 
 const AudioContextFunc = window.AudioContext || window.webkitAudioContext
-const audioContext = new AudioContextFunc()
-const player = new WebAudioFontPlayer()
+var audioContext = null
+var player = null
+
+function initialize() {
+  if (audioContext == null) {
+    audioContext = new AudioContextFunc()
+  }
+
+  if (player == null){
+    player = new WebAudioFontPlayer()
+  }
+}
 
 app.ports.stop.subscribe(function () {
   player.cancelQueue(audioContext)
 })
 
 app.ports.play.subscribe(function (data) {
+  initialize()
   data.instruments.forEach(function (instrument) {
     const info = player.loader.instrumentInfo(instrument)
     player.loader.startLoad(audioContext, info.url, info.variable)
@@ -31,7 +42,7 @@ app.ports.play.subscribe(function (data) {
   player.loader.waitLoad(function () {
     player.cancelQueue(audioContext)
 
-    const startTime = audioContext.currentTime + 0.2
+    const startTime = audioContext.currentTime + 0.5
 
     data.events.forEach(function (event) {
       if (event.instrument.type == 'percussion') {

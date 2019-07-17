@@ -26,10 +26,10 @@ type alias Model =
 init : ( Model, Cmd Msg )
 init =
     ( Dict.empty
-        |> Dict.insert "1. Children's Songs No. 6 (Chick Corea)" (ChildrenSong.childSong6 |> Perf.performPitch)
-        |> Dict.insert "2. Simple Drum Beat" (Drums.simpleBeat |> Perf.performPitch)
-        |> Dict.insert "3. African Drum Beat" (Drums.africanDrumBeat |> Perf.performPitch)
-        |> Dict.insert "4. Sing A Song Of Song (Kenny Garrett)" (SingA.song |> Perf.performPitch)
+        |> Dict.insert "1. Children's Songs No. 6 (Chick Corea)" (ChildrenSong.childSong6 |> Perf.performNote1)
+        |> Dict.insert "2. Simple Drum Beat" (Drums.simpleBeat |> Perf.performNote1)
+        |> Dict.insert "3. African Drum Beat" (Drums.africanDrumBeat |> Perf.performNote1)
+        |> Dict.insert "4. Sing A Song Of Song (Kenny Garrett)" (SingA.song |> Perf.performNote1)
     , Cmd.none
     )
 

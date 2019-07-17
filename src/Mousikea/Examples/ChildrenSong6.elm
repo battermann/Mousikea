@@ -6,6 +6,8 @@ import Mousikea.Types
         ( Dur
         , InstrumentName(..)
         , Music(..)
+        , Music1
+        , NoteAttribute(..)
         , Pitch
         , Primitive(..)
         )
@@ -33,7 +35,7 @@ graceNote n m =
             m
 
 
-childSong6 : Music Pitch
+childSong6 : Music1
 childSong6 =
     let
         t =
@@ -41,6 +43,7 @@ childSong6 =
     in
     instrument RhodesPiano
         (tempo t (Par bassLine mainVoice))
+        |> mMap (\p -> ( p, [ Volume 60 ] ))
 
 
 bassLine : Music Pitch
