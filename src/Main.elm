@@ -8,6 +8,7 @@ import Browser
 import Dict exposing (Dict)
 import Html exposing (Html)
 import Html.Attributes
+import Mousikea.Examples.BlueLambda as BlueLambda
 import Mousikea.Examples.ChildrenSong6 as ChildrenSong
 import Mousikea.Examples.Drums as Drums
 import Mousikea.Examples.SingASongOfSong as SingA
@@ -27,9 +28,10 @@ init : ( Model, Cmd Msg )
 init =
     ( Dict.empty
         |> Dict.insert "1. Children's Songs No. 6 (Chick Corea)" (ChildrenSong.childSong6 |> Perf.performNote1)
-        |> Dict.insert "2. Simple Drum Beat" (Drums.simpleBeat |> Perf.performNote1)
-        |> Dict.insert "3. African Drum Beat" (Drums.africanDrumBeat |> Perf.performNote1)
-        |> Dict.insert "4. Sing A Song Of Song (Kenny Garrett)" (SingA.song |> Perf.performNote1)
+        |> Dict.insert "2. Blue Lambda" (BlueLambda.blueLambda |> Perf.performNote1)
+        |> Dict.insert "3. Simple Drum Beat" (Drums.simpleBeat |> Perf.performNote1)
+        |> Dict.insert "4. African Drum Beat" (Drums.africanDrumBeat |> Perf.performNote1)
+        |> Dict.insert "5. Sing A Song Of Song (Kenny Garrett)" (SingA.song |> Perf.performNote1)
     , Cmd.none
     )
 
