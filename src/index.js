@@ -44,8 +44,6 @@ app.ports.play.subscribe(function (data) {
 
     const startTime = audioContext.currentTime + 0.5
 
-    console.debug(data.events.length)
-
     data.events.forEach(function (event) {
       if (event.instrument.type == 'percussion') {
         const info = player.loader.drumInfo(event.instrument.key)
@@ -60,8 +58,6 @@ app.ports.play.subscribe(function (data) {
       }
     })
   })
-
-  console.debug('done loading events')
 
   return false
 })

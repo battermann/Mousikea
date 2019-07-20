@@ -12,7 +12,9 @@ import Mousikea.Examples.BlueLambda as BlueLambda
 import Mousikea.Examples.ChildrenSong6 as ChildrenSong
 import Mousikea.Examples.Drums as Drums
 import Mousikea.Examples.SingASongOfSong as SingA
+import Mousikea.Generator as Gen
 import Mousikea.Midi.MEvent as Perf exposing (Performance)
+import Random
 import WebAudioFont
 
 
@@ -21,17 +23,25 @@ import WebAudioFont
 
 
 type alias Model =
-    Dict String Performance
+    { static : Dict String Performance
+    , random : Dict String (Random.Generator Performance)
+    }
 
 
 init : ( Model, Cmd Msg )
 init =
-    ( Dict.empty
-        |> Dict.insert "1. Children's Songs No. 6 (Chick Corea)" (ChildrenSong.childSong6 |> Perf.performNote1)
-        |> Dict.insert "2. Blue Lambda" (BlueLambda.blueLambda |> Perf.performNote1)
-        |> Dict.insert "3. Simple Drum Beat" (Drums.simpleBeat |> Perf.performNote1)
-        |> Dict.insert "4. African Drum Beat" (Drums.africanDrumBeat |> Perf.performNote1)
-        |> Dict.insert "5. Sing A Song Of Song (Kenny Garrett)" (SingA.song |> Perf.performNote1)
+    ( { static =
+            Dict.empty
+                |> Dict.insert "1. Children's Songs No. 6 (Chick Corea)" (ChildrenSong.childSong6 |> Perf.performNote1)
+                |> Dict.insert "2. Blue Lambda" (BlueLambda.blueLambda |> Perf.performNote1)
+                |> Dict.insert "3. Simple Drum Beat" (Drums.simpleBeat |> Perf.performNote1)
+                |> Dict.insert "4. African Drum Beat" (Drums.africanDrumBeat |> Perf.performNote1)
+                |> Dict.insert "5. Sing A Song Of Song (Kenny Garrett)" (SingA.song |> Perf.performNote1)
+      , random =
+            Dict.empty
+                |> Dict.insert "6. Randomness with Tonality and Volume" (Gen.example |> Random.map Perf.performAbsPitchVol)
+                |> Dict.insert "7. Random Bossa Nova" (Gen.bossa |> Random.map Perf.performAbsPitchVol)
+      }
     , Cmd.none
     )
 
@@ -42,6 +52,8 @@ init =
 
 type Msg
     = Play String
+    | Generate String
+    | Generated Performance
     | Stop
 
 
@@ -49,14 +61,29 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         Play key ->
-            ( model, model |> Dict.get key |> Maybe.map WebAudioFont.queueWavTable |> Maybe.withDefault Cmd.none )
+            ( model, model.static |> Dict.get key |> Maybe.map WebAudioFont.queueWavTable |> Maybe.withDefault Cmd.none )
 
         Stop ->
             ( model, WebAudioFont.stop () )
 
+        Generate key ->
+            ( model, model.random |> Dict.get key |> Maybe.map (Random.generate Generated) |> Maybe.withDefault Cmd.none )
+
+        Generated performance ->
+            ( model, WebAudioFont.queueWavTable performance )
+
 
 
 ---- VIEW ----
+
+
+viewSong : (String -> Msg) -> String -> Html Msg
+viewSong msg key =
+    Html.div [ Spacing.mt5 ]
+        [ Html.h3 [ Spacing.mt5 ] [ Html.text key ]
+        , Button.button [ Button.primary, Button.onClick (msg key) ] [ Html.i [ Html.Attributes.class "fas fa-play" ] [] ]
+        , Button.button [ Button.attrs [ Spacing.ml2 ], Button.primary, Button.onClick Stop ] [ Html.i [ Html.Attributes.class "fas fa-stop" ] [] ]
+        ]
 
 
 view : Model -> Html Msg
@@ -65,17 +92,14 @@ view model =
         [ CDN.stylesheet -- creates an inline style node with the Bootstrap CSS
         , Grid.row []
             [ Grid.col []
-                [ Html.h1 [] [ Html.text "Making Music with Elm" ]
-                , model
+                [ Html.h1 [] [ Html.text "Music Generation with Elm" ]
+                , model.static
                     |> Dict.keys
-                    |> List.map
-                        (\key ->
-                            Html.div []
-                                [ Html.h3 [ Spacing.mt5 ] [ Html.text key ]
-                                , Button.button [ Button.outlineSecondary, Button.onClick (Play key) ] [ Html.i [ Html.Attributes.class "fas fa-play" ] [] ]
-                                , Button.button [ Button.attrs [ Spacing.ml2 ], Button.outlineSecondary, Button.onClick Stop ] [ Html.i [ Html.Attributes.class "fas fa-stop" ] [] ]
-                                ]
-                        )
+                    |> List.map (viewSong Play)
+                    |> Html.div []
+                , model.random
+                    |> Dict.keys
+                    |> List.map (viewSong Generate)
                     |> Html.div []
                 ]
             ]
