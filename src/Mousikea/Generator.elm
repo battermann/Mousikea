@@ -8,9 +8,7 @@ import Mousikea.Types
         , Dur
         , InstrumentName(..)
         , Music(..)
-        , Music1
         , NoteAttribute(..)
-        , Pitch
         , Primitive(..)
         , Volume
         )
