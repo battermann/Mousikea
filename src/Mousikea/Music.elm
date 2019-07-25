@@ -116,6 +116,7 @@ module Mousikea.Music exposing
     , zero
     )
 
+import Mousikea.PercussionSound as Perc exposing (PercussionSound)
 import Mousikea.Types
     exposing
         ( AbsPitch
@@ -140,7 +141,6 @@ import Mousikea.Types
         , Tempo(..)
         , Volume
         )
-import Mousikea.Types.PercussionSound as Perc exposing (PercussionSound)
 import Mousikea.Util.Ratio as Ratio exposing (Rational, add, div, fromInt, isZero, max, min, mul, over, sub)
 
 

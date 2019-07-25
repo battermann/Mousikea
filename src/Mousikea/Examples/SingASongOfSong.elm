@@ -1,6 +1,7 @@
 module Mousikea.Examples.SingASongOfSong exposing (song)
 
 import Mousikea.Music exposing (..)
+import Mousikea.PercussionSound exposing (PercussionSound(..))
 import Mousikea.Types
     exposing
         ( InstrumentName(..)
@@ -10,7 +11,6 @@ import Mousikea.Types
         , Pitch
         , Primitive(..)
         )
-import Mousikea.Types.PercussionSound exposing (PercussionSound(..))
 import Mousikea.Util.Ratio as Ratio
 
 

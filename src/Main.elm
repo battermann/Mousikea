@@ -34,13 +34,12 @@ init =
             Dict.empty
                 |> Dict.insert "1. Children's Songs No. 6 (Chick Corea)" (ChildrenSong.childSong6 |> Perf.performNote1)
                 |> Dict.insert "2. Blue Lambda" (BlueLambda.blueLambda |> Perf.performNote1)
-                |> Dict.insert "3. Simple Drum Beat" (Drums.simpleBeat |> Perf.performNote1)
-                |> Dict.insert "4. African Drum Beat" (Drums.africanDrumBeat |> Perf.performNote1)
-                |> Dict.insert "5. Sing A Song Of Song (Kenny Garrett)" (SingA.song |> Perf.performNote1)
+                |> Dict.insert "3. Simple Disco Drum Beat" (Drums.simpleBeat |> Perf.performNote1)
+                |> Dict.insert "4. Sing A Song Of Song (Kenny Garrett)" (SingA.song |> Perf.performNote1)
       , random =
             Dict.empty
-                |> Dict.insert "6. Randomness with Tonality and Volume" (Gen.example |> Random.map Perf.performAbsPitchVol)
-                |> Dict.insert "7. Random Bossa Nova" (Gen.bossa |> Random.map Perf.performAbsPitchVol)
+                |> Dict.insert "5. Randomness with Tonality and Volume" (Gen.randomness |> Random.map Perf.performAbsPitchVol)
+                |> Dict.insert "6. Random Bossa" (Gen.bossa |> Random.map Perf.performNote1)
       }
     , Cmd.none
     )

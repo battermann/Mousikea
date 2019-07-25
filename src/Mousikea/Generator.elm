@@ -1,14 +1,17 @@
-module Mousikea.Generator exposing (bossa, example)
+module Mousikea.Generator exposing (bossa, randomness)
 
 import List.Extra
 import Mousikea.Music exposing (..)
+import Mousikea.PercussionSound exposing (PercussionSound(..))
 import Mousikea.Types
     exposing
         ( AbsPitch
         , Dur
         , InstrumentName(..)
         , Music(..)
+        , Music1
         , NoteAttribute(..)
+        , PitchClass(..)
         , Primitive(..)
         , Volume
         )
@@ -17,99 +20,143 @@ import Random
 
 
 type alias Scale =
-    List AbsPitch
+    List PitchClass
+
+
+type alias LeadSheetPart =
+    { duration : Dur
+    , scale : Scale
+    }
 
 
 type alias MusicV =
     Music ( AbsPitch, Volume )
 
 
-bossa : Random.Generator MusicV
+bossa : Random.Generator Music1
 bossa =
     let
-        cMin =
-            [ 0, 2, 3, 5, 7, 8, 10 ]
+        cDorian =
+            [ C, D, Ef, F, G, A, Bf ]
 
-        cMaj =
-            [ 0, 2, 4, 5, 7, 9, 11 ]
+        product f xs ys =
+            xs |> List.Extra.andThen (\x -> List.map (f x) ys)
 
-        minAndMajScales =
-            List.range 0 11 |> List.Extra.andThen (\root -> [ cMin |> List.map ((+) root), cMaj |> List.map ((+) root) ])
+        scales : List Scale
+        scales =
+            product
+                (\root -> List.map (\pc -> pcToInt pc + root |> indexToPitchClass))
+                (List.range 0 11)
+                [ cDorian ]
 
-        durScalePairs n =
-            Random.list n (Random.uniform cMin (List.tail minAndMajScales |> Maybe.withDefault []))
-                |> Random.map (List.map (Tuple.pair (Ratio.fromInt 2)))
+        parts n =
+            case scales of
+                [] ->
+                    Random.constant []
+
+                x :: xs ->
+                    Random.list n (Random.uniform x xs)
+                        |> Random.map
+                            (List.map
+                                (\scale ->
+                                    { duration = Ratio.fromInt 1
+                                    , scale = scale
+                                    }
+                                )
+                            )
     in
-    durScalePairs 32
+    parts 32
         |> Random.andThen mkBossa
-        |> Random.map (tempo (Ratio.over 3 2))
+        |> Random.map (fromAbsPitchVolume >> Par (times 16 percussion) >> tempo (Ratio.over 3 2))
 
 
-mkBossa : List ( Dur, Scale ) -> Random.Generator MusicV
-mkBossa durScalesPairs =
-    case durScalesPairs of
+percussion : Music1
+percussion =
+    let
+        maracas =
+            perc Maracas en |> times 16
+
+        cl =
+            perc Claves
+
+        clave =
+            line [ rest qn, cl dqn, cl dqn, cl dqn, cl dqn, cl qn ]
+    in
+    Par maracas clave |> mMap (\p -> ( p, 40 )) |> fromPitchVolume
+
+
+mkBossa : List LeadSheetPart -> Random.Generator MusicV
+mkBossa leadSheet =
+    case leadSheet of
         [] ->
             Random.constant empty
 
-        ( dur, scale ) :: tail ->
+        part :: tail ->
             let
-                transScale =
-                    List.map ((+) 60) scale
+                notesFromScale =
+                    List.range 60 71
+                        |> List.filter (\p -> part.scale |> List.map pcToInt |> List.member (p |> modBy 12))
+
+                bassRoot =
+                    part.scale
+                        |> List.Extra.getAt 0
+                        |> Maybe.andThen (\pc -> List.range 36 48 |> List.Extra.find (\p -> modBy 12 p == pcToInt pc))
+
+                bassFifth =
+                    part.scale
+                        |> List.Extra.getAt 4
+                        |> Maybe.andThen (\pc -> List.range 36 48 |> List.Extra.find (\p -> modBy 12 p == pcToInt pc))
 
                 mkBass root fifth =
                     line
-                        [ note dqn ( 36 + root, 100 )
-                        , note en ( 36 + root, 80 )
-                        , note dqn ( 36 + fifth, 100 )
-                        , note en ( 36 + fifth, 80 )
+                        [ note dqn ( root, 100 )
+                        , note en ( fifth, 80 )
+                        , note dqn ( fifth, 100 )
+                        , note en ( root, 80 )
                         ]
                         |> times 8
-                        |> cut dur
                         |> instrument AcousticBass
 
-                mkComp third seventh =
-                    line
-                        [ chord [ note en (third + 48), note en (seventh + 48) ]
-                        , rest en
-                        , chord [ note en (third + 48), note en (seventh + 48) ]
-                        , rest qn
-                        , chord [ note en (third + 48), note en (seventh + 48) ]
-                        , rest en
-                        , chord [ note en (third + 48), note en (seventh + 48) ]
-                        , rest en
-                        , chord [ note en (third + 48), note en (seventh + 48) ]
-                        , rest qn
-                        , chord [ note en (third + 48), note en (seventh + 48) ]
-                        , rest en
-                        , chord [ note en (third + 48), note en (seventh + 48) ]
-                        , rest en
-                        ]
-                        |> mMap (\p -> ( p, 60 ))
-                        |> cut dur
-                        |> instrument RhodesPiano
-
                 bass =
-                    Maybe.map2 mkBass (List.Extra.getAt 0 scale) (List.Extra.getAt 4 scale)
-
-                comp =
-                    Maybe.map2 mkComp (List.Extra.getAt 0 scale) (List.Extra.getAt 4 scale)
-
-                rythm =
-                    Maybe.map2 Par bass comp
+                    Maybe.map2 mkBass bassRoot bassFifth
                         |> Maybe.withDefault empty
 
+                voicing =
+                    List.range 60 71
+                        |> List.filter
+                            (\p ->
+                                part.scale
+                                    |> List.indexedMap Tuple.pair
+                                    |> List.filterMap
+                                        (\( i, pc ) ->
+                                            if i == 0 || i == 2 || i == 6 then
+                                                Just (pcToInt pc)
+
+                                            else
+                                                Nothing
+                                        )
+                                    |> List.member (p |> modBy 12)
+                            )
+
+                comping =
+                    Random.list 16 (withRandomDur [ qn, qn, qn, qn, qn, qn, en ] 20 (\dur _ -> voicing |> List.map (note dur) |> chord |> mMap (\p -> ( p, 25 ))))
+                        |> Random.map (line >> instrument RhodesPiano)
+
+                rythm =
+                    comping |> Random.map (Par bass) |> Random.map (cut part.duration)
+
                 mel =
-                    randomMel dur transScale [ qn, en, en, en ] 40
+                    randomMel part.duration notesFromScale [ qn, en, en, en ] 40
                         |> Random.map (instrument Vibraphone)
 
                 rythmAndMel =
-                    mel |> Random.map (Par rythm)
+                    Random.map2 Par mel rythm
             in
             Random.map2 Seq rythmAndMel (mkBossa tail)
 
 
-example : Random.Generator MusicV
-example =
+randomness : Random.Generator MusicV
+randomness =
     let
         mel1 =
             randomMel (Ratio.fromInt 32) [ 60, 62, 63, 65, 67, 68, 70, 72, 73, 75, 77, 79 ] [ qn, en, en, en ] 60
@@ -135,6 +182,27 @@ randomMel dur pitches durs thres =
                     |> Random.andThen (\m -> rndMel (Seq m acc))
     in
     rndMel empty
+
+
+withRandomDur : List Dur -> Int -> (Dur -> Volume -> MusicV) -> Random.Generator MusicV
+withRandomDur durs thres f =
+    case durs of
+        d :: ds ->
+            let
+                mkPrim dur vol =
+                    if vol < thres then
+                        rest dur
+
+                    else
+                        f dur vol
+            in
+            Random.map2
+                mkPrim
+                (Random.uniform d ds)
+                (Random.int 0 70)
+
+        [] ->
+            Random.constant empty
 
 
 randomPrim : List AbsPitch -> List Dur -> Int -> Random.Generator MusicV

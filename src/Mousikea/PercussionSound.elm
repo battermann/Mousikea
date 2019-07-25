@@ -1,4 +1,4 @@
-module Mousikea.Types.PercussionSound exposing (PercussionSound(..), fromEnum)
+module Mousikea.PercussionSound exposing (PercussionSound(..), fromEnum)
 
 
 type PercussionSound

@@ -1,6 +1,7 @@
 module Mousikea.Examples.Drums exposing (africanDrumBeat, simpleBeat)
 
 import Mousikea.Music exposing (..)
+import Mousikea.PercussionSound exposing (PercussionSound(..))
 import Mousikea.Types
     exposing
         ( InstrumentName(..)
@@ -9,15 +10,14 @@ import Mousikea.Types
         , NoteAttribute(..)
         , Primitive(..)
         )
-import Mousikea.Types.PercussionSound exposing (PercussionSound(..))
 import Mousikea.Util.Ratio as Ratio
 
 
 simpleBeat : Music1
 simpleBeat =
-    times 2 (perc AcousticBassDrum hn)
+    times 4 (perc AcousticBassDrum qn)
         |> Par (times 8 (perc ClosedHiHat en))
-        |> Par (line [ rest qn, perc AcousticSnare qn ] |> times 2)
+        |> Par (line [ rest qn, Par (perc AcousticSnare qn) (perc HandClap qn) ] |> times 2)
         |> times 16
         |> mMap (\p -> ( p, [ Volume 60 ] ))
 

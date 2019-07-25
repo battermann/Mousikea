@@ -13,6 +13,7 @@
             "elm/random": "1.0.0",
             "elm-community/dict-extra": "2.4.0",
             "elm-community/list-extra": "8.2.0",
+            "elm-community/maybe-extra": "5.0.0",
             "rundis/elm-bootstrap": "5.1.0"
         },
         "indirect": {
