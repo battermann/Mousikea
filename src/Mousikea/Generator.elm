@@ -1,4 +1,4 @@
-module Mousikea.Generator exposing (bossa, randomness)
+module Mousikea.Generator exposing (blueBossa, bossa, randomness)
 
 import List.Extra
 import Mousikea.Music as Music exposing (..)
@@ -48,7 +48,7 @@ bossa =
                         |> Random.map
                             (List.map
                                 (\scale ->
-                                    { duration = Ratio.fromInt 1
+                                    { duration = wn
                                     , scale = scale
                                     }
                                 )
@@ -56,6 +56,54 @@ bossa =
     in
     parts 32
         |> Random.andThen mkBossa
+        |> Random.map (fromAbsPitchVolume >> Par (times 16 percussion) >> tempo (Ratio.over 3 2))
+
+
+blueBossa : Random.Generator Music1
+blueBossa =
+    let
+        cMin =
+            [ C, D, Ef, F, G, Af, Bf ]
+
+        fMin =
+            [ F, G, Af, Bf, C, D, Ef ]
+
+        dHalfDim =
+            [ D, Ef, F, G, Af, Bf, C ]
+
+        gDom =
+            [ G, Af, Bf, B, D, Ef, F ]
+
+        dfMaj =
+            [ Df, Ef, F, Gf, Af, Bf, C ]
+
+        eMin =
+            [ Ef, F, Gf, Af, Bf, C, Df ]
+
+        afDom =
+            [ Af, Bf, C, Df, Ef, F, Gf ]
+
+        part1 =
+            [ LeadSheetPart bn cMin
+            , LeadSheetPart bn fMin
+            , LeadSheetPart wn dHalfDim
+            , LeadSheetPart wn gDom
+            , LeadSheetPart bn cMin
+            ]
+
+        part2 =
+            [ LeadSheetPart wn eMin
+            , LeadSheetPart wn afDom
+            , LeadSheetPart bn dfMaj
+            , LeadSheetPart wn dHalfDim
+            , LeadSheetPart wn gDom
+            , LeadSheetPart wn cMin
+            , LeadSheetPart hn dHalfDim
+            , LeadSheetPart hn gDom
+            ]
+    in
+    (part1 ++ part2 ++ part1 ++ part2)
+        |> mkBossa
         |> Random.map (fromAbsPitchVolume >> Par (times 16 percussion) >> tempo (Ratio.over 3 2))
 
 

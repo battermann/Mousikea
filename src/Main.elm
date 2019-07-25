@@ -39,7 +39,8 @@ init =
       , random =
             Dict.empty
                 |> Dict.insert "5. Randomness with Tonality and Volume" (Gen.randomness |> Random.map Perf.performAbsPitchVol)
-                |> Dict.insert "6. Random Bossa" (Gen.bossa |> Random.map Perf.performNote1)
+                |> Dict.insert "6. Blue Bossa Jam" (Gen.blueBossa |> Random.map Perf.performNote1)
+                |> Dict.insert "7. Random Bossa" (Gen.bossa |> Random.map Perf.performNote1)
       }
     , Cmd.none
     )
@@ -91,7 +92,7 @@ view model =
         [ CDN.stylesheet -- creates an inline style node with the Bootstrap CSS
         , Grid.row []
             [ Grid.col []
-                [ Html.h1 [] [ Html.text "Music Generation with Elm" ]
+                [ Html.h1 [] [ Html.text "Making Music with Elm" ]
                 , model.static
                     |> Dict.keys
                     |> List.map (viewSong Play)
