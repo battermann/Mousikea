@@ -1,5 +1,24 @@
 module Mousikea.Music exposing
-    ( a
+    ( AbsPitch
+    , Articulation(..)
+    , Control(..)
+    , Dynamic(..)
+    , InstrumentName(..)
+    , Mode(..)
+    , Music(..)
+    , Music1
+    , Note1
+    , NoteAttribute(..)
+    , NoteHead(..)
+    , Octave
+    , Ornament(..)
+    , PhraseAttribute(..)
+    , Pitch
+    , PitchClass(..)
+    , StdLoudness(..)
+    , Tempo(..)
+    , Volume
+    , a
     , absPitch
     , af
     , aff
@@ -56,6 +75,7 @@ module Mousikea.Music exposing
     , ff
     , fff
     , flip
+    , fold
     , fromAbsPitch
     , fromAbsPitchVolume
     , fromNote1
@@ -81,11 +101,9 @@ module Mousikea.Music exposing
     , keysig
     , line
     , lineToList
-    , mFold
-    , mMap
+    , map
     , note
     , offset
-    , pMap
     , pcToInt
     , perc
     , phrase
@@ -117,31 +135,328 @@ module Mousikea.Music exposing
     )
 
 import Mousikea.PercussionSound as Perc exposing (PercussionSound)
-import Mousikea.Types
-    exposing
-        ( AbsPitch
-        , Articulation(..)
-        , Control(..)
-        , Dur
-        , Dynamic(..)
-        , InstrumentName(..)
-        , Mode(..)
-        , Music(..)
-        , Music1
-        , Note1
-        , NoteAttribute(..)
-        , NoteHead(..)
-        , Octave
-        , Ornament(..)
-        , PhraseAttribute(..)
-        , Pitch
-        , PitchClass(..)
-        , Primitive(..)
-        , StdLoudness(..)
-        , Tempo(..)
-        , Volume
-        )
-import Mousikea.Util.Ratio as Ratio exposing (Rational, add, div, fromInt, isZero, max, min, mul, over, sub)
+import Mousikea.Primitive as Primitive exposing (Dur, Primitive(..))
+import Mousikea.Util.Ratio as Ratio exposing (Rational)
+
+
+
+---- Music Type ----
+
+
+type Music a
+    = Prim (Primitive a) --  primitive value
+    | Seq (Music a) (Music a) --  sequential composition
+    | Par (Music a) (Music a) --  parallel composition
+    | Modify Control (Music a) --  modifier
+
+
+type alias Music1 =
+    Music Note1
+
+
+
+---- Other Types
+
+
+type PitchClass
+    = Cff
+    | Cf
+    | C
+    | Dff
+    | Cs
+    | Df
+    | Css
+    | D
+    | Eff
+    | Ds
+    | Ef
+    | Fff
+    | Dss
+    | E
+    | Ff
+    | Es
+    | F
+    | Gff
+    | Ess
+    | Fs
+    | Gf
+    | Fss
+    | G
+    | Aff
+    | Gs
+    | Af
+    | Gss
+    | A
+    | Bff
+    | As
+    | Bf
+    | Ass
+    | B
+    | Bs
+    | Bss
+
+
+type alias AbsPitch =
+    Int
+
+
+type alias Octave =
+    Int
+
+
+type alias Pitch =
+    ( PitchClass, Octave )
+
+
+type Control
+    = Tempo Rational --  scale the tempo
+    | Transpose AbsPitch --  transposition
+    | Instrument InstrumentName --  instrument label
+    | Phrase (List PhraseAttribute) --  phrase attributes
+    | KeySig PitchClass Mode --  key signature and mode
+    | Custom String --  for user-specified controls
+
+
+type Mode
+    = Major
+    | Minor
+    | Ionian
+    | Dorian
+    | Phrygian
+    | Lydian
+    | Mixolydian
+    | Aeolian
+    | Locrian
+    | CustomMode String
+
+
+type InstrumentName
+    = AcousticGrandPiano
+    | BrightAcousticPiano
+    | ElectricGrandPiano
+    | HonkyTonkPiano
+    | RhodesPiano
+    | ChorusedPiano
+    | Harpsichord
+    | Clavinet
+    | Celesta
+    | Glockenspiel
+    | MusicBox
+    | Vibraphone
+    | Marimba
+    | Xylophone
+    | TubularBells
+    | Dulcimer
+    | HammondOrgan
+    | PercussiveOrgan
+    | RockOrgan
+    | ChurchOrgan
+    | ReedOrgan
+    | Accordion
+    | Harmonica
+    | TangoAccordion
+    | AcousticGuitarNylon
+    | AcousticGuitarSteel
+    | ElectricGuitarJazz
+    | ElectricGuitarClean
+    | ElectricGuitarMuted
+    | OverdrivenGuitar
+    | DistortionGuitar
+    | GuitarHarmonics
+    | AcousticBass
+    | ElectricBassFingered
+    | ElectricBassPicked
+    | FretlessBass
+    | SlapBass1
+    | SlapBass2
+    | SynthBass1
+    | SynthBass2
+    | Violin
+    | Viola
+    | Cello
+    | Contrabass
+    | TremoloStrings
+    | PizzicatoStrings
+    | OrchestralHarp
+    | Timpani
+    | StringEnsemble1
+    | StringEnsemble2
+    | SynthStrings1
+    | SynthStrings2
+    | ChoirAahs
+    | VoiceOohs
+    | SynthVoice
+    | OrchestraHit
+    | Trumpet
+    | Trombone
+    | Tuba
+    | MutedTrumpet
+    | FrenchHorn
+    | BrassSection
+    | SynthBrass1
+    | SynthBrass2
+    | SopranoSax
+    | AltoSax
+    | TenorSax
+    | BaritoneSax
+    | Oboe
+    | Bassoon
+    | EnglishHorn
+    | Clarinet
+    | Piccolo
+    | Flute
+    | Recorder
+    | PanFlute
+    | BlownBottle
+    | Shakuhachi
+    | Whistle
+    | Ocarina
+    | Lead1Square
+    | Lead2Sawtooth
+    | Lead3Calliope
+    | Lead4Chiff
+    | Lead5Charang
+    | Lead6Voice
+    | Lead7Fifths
+    | Lead8BassLead
+    | Pad1NewAge
+    | Pad2Warm
+    | Pad3Polysynth
+    | Pad4Choir
+    | Pad5Bowed
+    | Pad6Metallic
+    | Pad7Halo
+    | Pad8Sweep
+    | FX1Train
+    | FX2Soundtrack
+    | FX3Crystal
+    | FX4Atmosphere
+    | FX5Brightness
+    | FX6Goblins
+    | FX7Echoes
+    | FX8SciFi
+    | Sitar
+    | Banjo
+    | Shamisen
+    | Koto
+    | Kalimba
+    | Bagpipe
+    | Fiddle
+    | Shanai
+    | TinkleBell
+    | Agogo
+    | SteelDrums
+    | Woodblock
+    | TaikoDrum
+    | MelodicDrum
+    | SynthDrum
+    | ReverseCymbal
+    | GuitarFretNoise
+    | BreathNoise
+    | Seashore
+    | BirdTweet
+    | TelephoneRing
+    | Helicopter
+    | Applause
+    | Gunshot
+    | Percussion
+    | CustomInstrument String
+
+
+type PhraseAttribute
+    = Dyn Dynamic
+    | Tmp Tempo
+    | Art Articulation
+    | Orn Ornament
+
+
+type Dynamic
+    = Accent Rational
+    | Crescendo Rational
+    | Diminuendo Rational
+    | StdLoudness StdLoudness
+    | Loudness Rational
+
+
+type StdLoudness
+    = PPP
+    | PP
+    | P
+    | MP
+    | SF
+    | MF
+    | NF
+    | FF
+    | FFF
+
+
+type Tempo
+    = Ritardando Rational
+    | Accelerando Rational
+
+
+type Articulation
+    = Staccato Rational
+    | Legato Rational
+    | Slurred Rational
+    | Tenuto
+    | Marcato
+    | Pedal
+    | Fermata
+    | FermataDown
+    | Breath
+    | DownBow
+    | UpBow
+    | Harmonic
+    | Pizzicato
+    | LeftPizz
+    | BartokPizz
+    | Swell
+    | Wedge
+    | Thumb
+    | Stopped
+
+
+type Ornament
+    = Trill
+    | Mordent
+    | InvMordent
+    | DoubleMordent
+    | Turn
+    | TrilledTurn
+    | ShortTrill
+    | Arpeggio
+    | ArpeggioUp
+    | ArpeggioDown
+    | Instruction String
+    | Head NoteHead
+    | DiatonicTrans Int
+
+
+type NoteHead
+    = DiamondHead
+    | SquareHead
+    | XHead
+    | TriangleHead
+    | TremoloHead
+    | SlashHead
+    | ArtHarmonic
+    | NoHead
+
+
+type alias Volume =
+    Int
+
+
+type NoteAttribute
+    = Volume Int --  MIDI convention: 0=Ratio.min, 127=Ratio.max
+    | Fingering Int
+    | Dynamics String
+    | Params (List Float)
+
+
+type alias Note1 =
+    ( Pitch, List NoteAttribute )
 
 
 
@@ -150,12 +465,12 @@ import Mousikea.Util.Ratio as Ratio exposing (Rational, add, div, fromInt, isZer
 
 fromPitch : Music Pitch -> Music1
 fromPitch =
-    mMap (\p -> ( p, [] ))
+    map (\p -> ( p, [] ))
 
 
 fromPitchVolume : Music ( Pitch, Volume ) -> Music1
 fromPitchVolume =
-    mMap (\( p, v ) -> ( p, [ Volume v ] ))
+    map (\( p, v ) -> ( p, [ Volume v ] ))
 
 
 fromNote1 : Music Note1 -> Music1
@@ -165,12 +480,12 @@ fromNote1 =
 
 fromAbsPitch : Music AbsPitch -> Music1
 fromAbsPitch =
-    mMap (\ap -> ( pitch ap, [] ))
+    map (\ap -> ( pitch ap, [] ))
 
 
 fromAbsPitchVolume : Music ( AbsPitch, Volume ) -> Music1
 fromAbsPitchVolume =
-    mMap (\( ap, v ) -> ( pitch ap, [ Volume v ] ))
+    map (\( ap, v ) -> ( pitch ap, [ Volume v ] ))
 
 
 
@@ -389,7 +704,7 @@ bss octave dur =
 
 bn : Dur
 bn =
-    fromInt 2
+    Ratio.fromInt 2
 
 
 {-| brevis rests
@@ -401,7 +716,7 @@ bnr =
 
 wn : Dur
 wn =
-    fromInt 1
+    Ratio.fromInt 1
 
 
 {-| whole note rest
@@ -413,7 +728,7 @@ wnr =
 
 hn : Dur
 hn =
-    over 1 2
+    Ratio.over 1 2
 
 
 {-| half note rest
@@ -425,7 +740,7 @@ hnr =
 
 qn : Dur
 qn =
-    over 1 4
+    Ratio.over 1 4
 
 
 {-| quarter note rest
@@ -437,7 +752,7 @@ qnr =
 
 en : Dur
 en =
-    over 1 8
+    Ratio.over 1 8
 
 
 {-| eighth note rest
@@ -449,7 +764,7 @@ enr =
 
 sn : Dur
 sn =
-    over 1 16
+    Ratio.over 1 16
 
 
 {-| sixteenth note rest
@@ -461,7 +776,7 @@ snr =
 
 tn : Dur
 tn =
-    over 1 32
+    Ratio.over 1 32
 
 
 {-| thirty-second note rest
@@ -473,7 +788,7 @@ tnr =
 
 sfn : Dur
 sfn =
-    over 1 64
+    Ratio.over 1 64
 
 
 {-| sixty-fourth note rest
@@ -485,7 +800,7 @@ sfnr =
 
 dwn : Dur
 dwn =
-    over 3 2
+    Ratio.over 3 2
 
 
 {-| dotted whole note rest
@@ -497,7 +812,7 @@ dwnr =
 
 dhn : Dur
 dhn =
-    over 3 4
+    Ratio.over 3 4
 
 
 {-| dotted half note rest
@@ -509,7 +824,7 @@ dhnr =
 
 dqn : Dur
 dqn =
-    over 3 8
+    Ratio.over 3 8
 
 
 {-| dotted quarter note rest
@@ -521,7 +836,7 @@ dqnr =
 
 den : Dur
 den =
-    over 3 16
+    Ratio.over 3 16
 
 
 {-| dotted eighth note rest
@@ -533,7 +848,7 @@ denr =
 
 dsn : Dur
 dsn =
-    over 3 32
+    Ratio.over 3 32
 
 
 {-| dotted sixteenth note rest
@@ -545,7 +860,7 @@ dsnr =
 
 dtn : Dur
 dtn =
-    over 3 64
+    Ratio.over 3 64
 
 
 {-| dotted thirty-second note rest
@@ -557,7 +872,7 @@ dtnr =
 
 ddhn : Dur
 ddhn =
-    over 7 8
+    Ratio.over 7 8
 
 
 {-| double-dotted half note rest
@@ -569,7 +884,7 @@ ddhnr =
 
 ddqn : Dur
 ddqn =
-    over 7 16
+    Ratio.over 7 16
 
 
 {-| double-dotted quarter note rest
@@ -581,7 +896,7 @@ ddqnr =
 
 dden : Dur
 dden =
-    over 7 32
+    Ratio.over 7 32
 
 
 {-| double-dotted eighth note rest
@@ -593,7 +908,7 @@ ddenr =
 
 zero : Dur
 zero =
-    fromInt 0
+    Ratio.fromInt 0
 
 
 {-| a rest with duration zero
@@ -827,40 +1142,30 @@ lineToList m =
             lineToList m_
 
 
-pMap : (a -> b) -> Primitive a -> Primitive b
-pMap func prim =
-    case prim of
-        Note dur x ->
-            Note dur (func x)
-
-        Rest dur ->
-            Rest dur
-
-
-mMap : (a -> b) -> Music a -> Music b
-mMap func m =
+map : (a -> b) -> Music a -> Music b
+map func m =
     case m of
         Prim p ->
-            Prim (pMap func p)
+            Prim (Primitive.map func p)
 
         Seq m1 m2 ->
-            Seq (mMap func m1) (mMap func m2)
+            Seq (map func m1) (map func m2)
 
         Par m1 m2 ->
-            Par (mMap func m1) (mMap func m2)
+            Par (map func m1) (map func m2)
 
         Modify control m_ ->
-            Modify control (mMap func m_)
+            Modify control (map func m_)
 
 
 invertAt : Pitch -> Music Pitch -> Music Pitch
 invertAt pRef =
-    mMap (\p -> pitch (2 * absPitch pRef - absPitch p))
+    map (\p -> pitch (2 * absPitch pRef - absPitch p))
 
 
 invertAt1 : Pitch -> Music ( Pitch, a ) -> Music ( Pitch, a )
 invertAt1 pRef =
-    mMap (\( p, x ) -> ( pitch (2 * absPitch pRef - absPitch p), x ))
+    map (\( p, x ) -> ( pitch (2 * absPitch pRef - absPitch p), x ))
 
 
 invert : Music Pitch -> Music Pitch
@@ -875,7 +1180,7 @@ invert m =
                     []
 
         pRef =
-            mFold pFun (++) (++) (flip always) m
+            fold pFun (++) (++) (flip always) m
     in
     case pRef of
         [] ->
@@ -903,7 +1208,7 @@ invert1 m =
                     []
 
         pRef =
-            mFold pFun (++) (++) (flip always) m
+            fold pFun (++) (++) (flip always) m
     in
     case pRef of
         -- no pitches!
@@ -935,10 +1240,10 @@ retro m =
                     duration m2
             in
             if Ratio.gt d1 d2 then
-                Par (retro m1) (Seq (rest (sub d1 d2)) (retro m2))
+                Par (retro m1) (Seq (rest (Ratio.sub d1 d2)) (retro m2))
 
             else
-                Par (Seq (rest (sub d2 d1)) (retro m1)) (retro m2)
+                Par (Seq (rest (Ratio.sub d2 d1)) (retro m1)) (retro m2)
 
 
 retroInvert : Music Pitch -> Music Pitch
@@ -961,13 +1266,13 @@ duration m =
             dur
 
         Seq m1 m2 ->
-            add (duration m1) (duration m2)
+            Ratio.add (duration m1) (duration m2)
 
         Par m1 m2 ->
-            max (duration m1) (duration m2)
+            Ratio.max (duration m1) (duration m2)
 
         Modify (Tempo r) m_ ->
-            div (duration m_) r
+            Ratio.div (duration m_) r
 
         Modify _ m_ ->
             duration m_
@@ -983,7 +1288,7 @@ cut dur m =
             Prim (Note oldD p) ->
                 let
                     dur_ =
-                        max (min oldD dur) zero
+                        Ratio.max (Ratio.min oldD dur) zero
                 in
                 if Ratio.gt dur_ zero then
                     note dur_ p
@@ -992,7 +1297,7 @@ cut dur m =
                     empty
 
             Prim (Rest oldD) ->
-                rest (max (min oldD dur) zero)
+                rest (Ratio.max (Ratio.min oldD dur) zero)
 
             Par m1 m2 ->
                 Par (cut dur m1) (cut dur m2)
@@ -1003,12 +1308,12 @@ cut dur m =
                         cut dur m1
 
                     music2 =
-                        cut (sub dur (duration music1)) m2
+                        cut (Ratio.sub dur (duration music1)) m2
                 in
                 Seq music1 music2
 
             Modify (Tempo r) m_ ->
-                tempo r (cut (mul dur r) m_)
+                tempo r (cut (Ratio.mul dur r) m_)
 
             Modify control m_ ->
                 Modify control (cut dur m_)
@@ -1024,7 +1329,7 @@ remove dur m =
             Prim (Note oldD p) ->
                 let
                     d_ =
-                        max (sub oldD dur) zero
+                        Ratio.max (Ratio.sub oldD dur) zero
                 in
                 if Ratio.gt d_ zero then
                     note d_ p
@@ -1033,7 +1338,7 @@ remove dur m =
                     empty
 
             Prim (Rest oldD) ->
-                rest (max (sub oldD dur) zero)
+                rest (Ratio.max (Ratio.sub oldD dur) zero)
 
             Par m1 m2 ->
                 Par (remove dur m1) (remove dur m2)
@@ -1044,12 +1349,12 @@ remove dur m =
                         remove dur m1
 
                     m_2 =
-                        remove (sub dur (duration m1)) m2
+                        remove (Ratio.sub dur (duration m1)) m2
                 in
                 Seq m_1 m_2
 
             Modify (Tempo r) m_ ->
-                tempo r (remove (mul dur r) m_)
+                tempo r (remove (Ratio.mul dur r) m_)
 
             Modify control m_ ->
                 Modify control (remove dur m_)
@@ -1109,11 +1414,11 @@ perc ps dur =
     instrument Percussion (note dur (pitch (Perc.fromEnum ps + 35)))
 
 
-mFold : (Primitive a -> b) -> (b -> b -> b) -> (b -> b -> b) -> (Control -> b -> b) -> Music a -> b
-mFold func onSeq onPar func2 m =
+fold : (Primitive a -> b) -> (b -> b -> b) -> (b -> b -> b) -> (Control -> b -> b) -> Music a -> b
+fold func onSeq onPar func2 m =
     let
         rec =
-            mFold func onSeq onPar func2
+            fold func onSeq onPar func2
     in
     case m of
         Prim p ->
@@ -1136,22 +1441,22 @@ mFold func onSeq onPar func2 m =
 
 shiftPitches : AbsPitch -> Music Pitch -> Music Pitch
 shiftPitches k =
-    mMap (trans k)
+    map (trans k)
 
 
 shiftPitches1 : AbsPitch -> Music ( Pitch, b ) -> Music ( Pitch, b )
 shiftPitches1 k =
-    mMap (\( p, xs ) -> ( trans k p, xs ))
+    map (\( p, xs ) -> ( trans k p, xs ))
 
 
 scaleDurations : Rational -> Music a -> Music a
 scaleDurations r m =
     case m of
         Prim (Note dur p) ->
-            note (div dur r) p
+            note (Ratio.div dur r) p
 
         Prim (Rest dur) ->
-            rest (div dur r)
+            rest (Ratio.div dur r)
 
         Seq m1 m2 ->
             Seq (scaleDurations r m1) (scaleDurations r m2)

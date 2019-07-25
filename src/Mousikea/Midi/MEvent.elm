@@ -15,7 +15,21 @@ module Mousikea.Midi.MEvent exposing
 
 import Mousikea.Music
     exposing
-        ( absPitch
+        ( AbsPitch
+        , Articulation(..)
+        , Control(..)
+        , Dynamic(..)
+        , InstrumentName(..)
+        , Music(..)
+        , Music1
+        , Note1
+        , NoteAttribute(..)
+        , PhraseAttribute(..)
+        , Pitch
+        , StdLoudness(..)
+        , Tempo(..)
+        , Volume
+        , absPitch
         , fromAbsPitch
         , fromAbsPitchVolume
         , fromNote1
@@ -26,30 +40,8 @@ import Mousikea.Music
         , shiftPitches1
         , zero
         )
-import Mousikea.Types
-    exposing
-        ( AbsPitch
-        , Articulation(..)
-        , Control(..)
-        , Dur
-        , Dynamic(..)
-        , InstrumentName(..)
-        , Mode(..)
-        , Music(..)
-        , Music1
-        , Note1
-        , NoteAttribute(..)
-        , NoteHead(..)
-        , Ornament(..)
-        , PhraseAttribute(..)
-        , Pitch
-        , PitchClass(..)
-        , Primitive(..)
-        , StdLoudness(..)
-        , Tempo(..)
-        , Volume
-        )
-import Mousikea.Util.Ratio as Ratio exposing (Rational, add, div, divIntBy, fromInt, max, mul, mulByInt, sub)
+import Mousikea.Primitive exposing (Dur, Primitive(..))
+import Mousikea.Util.Ratio as Ratio exposing (Rational)
 
 
 type alias Performance =
@@ -135,10 +127,10 @@ perform1Dur =
         -- timing musicToMEventss
         metro : Int -> Dur -> DurT
         metro setting dur =
-            divIntBy 60 (mulByInt dur setting)
+            Ratio.divIntBy 60 (Ratio.mulByInt dur setting)
 
         defCon =
-            { mcTime = fromInt 0, mcInst = AcousticGrandPiano, mcDur = metro 120 qn, mcVol = 127 }
+            { mcTime = Ratio.fromInt 0, mcInst = AcousticGrandPiano, mcDur = metro 120 qn, mcVol = 127 }
     in
     musicToMEvents defCon << applyControls
 
@@ -169,10 +161,10 @@ musicToMEvents : MContext -> Music1 -> ( Performance, DurT )
 musicToMEvents ctx m =
     case m of
         Prim (Note dur p) ->
-            ( [ noteToMEvent ctx dur p ], mul dur ctx.mcDur )
+            ( [ noteToMEvent ctx dur p ], Ratio.mul dur ctx.mcDur )
 
         Prim (Rest dur) ->
-            ( [], mul dur ctx.mcDur )
+            ( [], Ratio.mul dur ctx.mcDur )
 
         Seq m1 m2 ->
             let
@@ -180,9 +172,9 @@ musicToMEvents ctx m =
                     musicToMEvents ctx m1
 
                 ( evs2, d2 ) =
-                    musicToMEvents { ctx | mcTime = add ctx.mcTime d1 } m2
+                    musicToMEvents { ctx | mcTime = Ratio.add ctx.mcTime d1 } m2
             in
-            ( evs1 ++ evs2, add d1 d2 )
+            ( evs1 ++ evs2, Ratio.add d1 d2 )
 
         Par m1 m2 ->
             let
@@ -192,7 +184,7 @@ musicToMEvents ctx m =
                 ( evs2, d2 ) =
                     musicToMEvents ctx m2
             in
-            ( merge evs1 evs2, max d1 d2 )
+            ( merge evs1 evs2, Ratio.max d1 d2 )
 
         Modify (Instrument i) m_ ->
             musicToMEvents { ctx | mcInst = i } m_
@@ -232,7 +224,7 @@ noteToMEvent ctx dur ( p, nas ) =
             { eTime = ctx.mcTime
             , ePitch = absPitch p
             , eInst = ctx.mcInst
-            , eDur = mul dur ctx.mcDur
+            , eDur = Ratio.mul dur ctx.mcDur
             , eVol = ctx.mcVol
             , eParams = []
             }
@@ -252,7 +244,7 @@ phraseToMEvents ctx pas m =
                     phraseToMEvents ctx t m
 
                 loud x =
-                    phraseToMEvents ctx (Dyn (Loudness (fromInt x)) :: t) m
+                    phraseToMEvents ctx (Dyn (Loudness (Ratio.fromInt x)) :: t) m
 
                 stretch x =
                     let
@@ -260,29 +252,29 @@ phraseToMEvents ctx pas m =
                             List.head pf |> Maybe.map .eTime |> Maybe.withDefault zero
 
                         r =
-                            div x dur
+                            Ratio.div x dur
 
                         upd ev =
                             let
                                 dt =
-                                    sub ev.eTime t0
+                                    Ratio.sub ev.eTime t0
 
                                 t_ =
-                                    add
-                                        (mul
-                                            (add (fromInt 1) (mul dt r))
+                                    Ratio.add
+                                        (Ratio.mul
+                                            (Ratio.add (Ratio.fromInt 1) (Ratio.mul dt r))
                                             dt
                                         )
                                         t0
 
                                 d_ =
-                                    mul
-                                        (add
-                                            (fromInt 1)
-                                            (mul
-                                                (add
-                                                    (mul
-                                                        (fromInt 2)
+                                    Ratio.mul
+                                        (Ratio.add
+                                            (Ratio.fromInt 1)
+                                            (Ratio.mul
+                                                (Ratio.add
+                                                    (Ratio.mul
+                                                        (Ratio.fromInt 2)
                                                         dt
                                                     )
                                                     ev.eDur
@@ -294,7 +286,7 @@ phraseToMEvents ctx pas m =
                             in
                             { ev | eTime = t_, eDur = d_ }
                     in
-                    ( List.map upd pf, mul (add (fromInt 1) x) dur )
+                    ( List.map upd pf, Ratio.mul (Ratio.add (Ratio.fromInt 1) x) dur )
 
                 inflate x =
                     let
@@ -302,20 +294,20 @@ phraseToMEvents ctx pas m =
                             List.head pf |> Maybe.map .eTime |> Maybe.withDefault zero
 
                         r =
-                            div x dur
+                            Ratio.div x dur
 
                         upd ev =
                             { ev
                                 | eVol =
-                                    mul
-                                        (add
-                                            (fromInt 1)
-                                            (mul
-                                                (sub ev.eTime t0)
+                                    Ratio.mul
+                                        (Ratio.add
+                                            (Ratio.fromInt 1)
+                                            (Ratio.mul
+                                                (Ratio.sub ev.eTime t0)
                                                 r
                                             )
                                         )
-                                        (fromInt ev.eVol)
+                                        (Ratio.fromInt ev.eVol)
                                         |> Ratio.round
                             }
                     in
@@ -323,7 +315,7 @@ phraseToMEvents ctx pas m =
             in
             case h of
                 Dyn (Accent x) ->
-                    ( List.map (\e -> { e | eVol = mul x (fromInt e.eVol) |> Ratio.round }) pf, dur )
+                    ( List.map (\e -> { e | eVol = Ratio.mul x (Ratio.fromInt e.eVol) |> Ratio.round }) pf, dur )
 
                 Dyn (StdLoudness l) ->
                     case l of
@@ -361,28 +353,28 @@ phraseToMEvents ctx pas m =
                     inflate x
 
                 Dyn (Diminuendo x) ->
-                    inflate (mul (fromInt -1) x)
+                    inflate (Ratio.mul (Ratio.fromInt -1) x)
 
                 Tmp (Ritardando x) ->
                     stretch x
 
                 Tmp (Accelerando x) ->
-                    stretch (mul (fromInt -1) x)
+                    stretch (Ratio.mul (Ratio.fromInt -1) x)
 
                 Art (Staccato x) ->
-                    ( List.map (\e -> { e | eDur = mul x e.eDur }) pf, dur )
+                    ( List.map (\e -> { e | eDur = Ratio.mul x e.eDur }) pf, dur )
 
                 Art (Legato x) ->
-                    ( List.map (\e -> { e | eDur = mul x e.eDur }) pf, dur )
+                    ( List.map (\e -> { e | eDur = Ratio.mul x e.eDur }) pf, dur )
 
                 Art (Slurred x) ->
                     let
                         lastStartTime =
-                            List.foldr (\e acc -> max e.eTime acc) zero pf
+                            List.foldr (\e acc -> Ratio.max e.eTime acc) zero pf
 
                         setDur e =
                             if Ratio.lt e.eTime lastStartTime then
-                                { e | eDur = mul x e.eDur }
+                                { e | eDur = Ratio.mul x e.eDur }
 
                             else
                                 e

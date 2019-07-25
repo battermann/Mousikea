@@ -1,16 +1,8 @@
 module Mousikea.Examples.SingASongOfSong exposing (song)
 
-import Mousikea.Music exposing (..)
+import Mousikea.Music as Music exposing (..)
 import Mousikea.PercussionSound exposing (PercussionSound(..))
-import Mousikea.Types
-    exposing
-        ( InstrumentName(..)
-        , Music(..)
-        , Music1
-        , NoteAttribute(..)
-        , Pitch
-        , Primitive(..)
-        )
+import Mousikea.Primitive exposing (Primitive(..))
 import Mousikea.Util.Ratio as Ratio
 
 
@@ -77,4 +69,4 @@ song =
     Seq rythm (Par (times 4 rythm) melody |> times 2)
         |> times 2
         |> tempo (Ratio.mul (Ratio.div qn qn) (Ratio.over 200 120))
-        |> mMap (\p -> ( p, [ Volume 60 ] ))
+        |> Music.map (\p -> ( p, [ Volume 60 ] ))

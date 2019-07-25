@@ -1,13 +1,6 @@
 module Mousikea.Examples.BlueLambda exposing (blueLambda)
 
-import Mousikea.Music exposing (..)
-import Mousikea.Types
-    exposing
-        ( InstrumentName(..)
-        , Music(..)
-        , Music1
-        , NoteAttribute(..)
-        )
+import Mousikea.Music as Music exposing (..)
 import Mousikea.Util.Ratio as Ratio
 
 
@@ -28,4 +21,4 @@ blueLambda =
     in
     x4
         |> instrument RhodesPiano
-        |> mMap (\p -> ( p, [ Volume 60 ] ))
+        |> Music.map (\p -> ( p, [ Volume 60 ] ))

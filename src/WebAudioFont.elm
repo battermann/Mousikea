@@ -3,7 +3,7 @@ port module WebAudioFont exposing (queueWavTable, stop)
 import Json.Encode exposing (Value)
 import List.Extra
 import Mousikea.Midi.MEvent exposing (MEvent, Performance)
-import Mousikea.Types exposing (AbsPitch, InstrumentName(..))
+import Mousikea.Music exposing (AbsPitch, InstrumentName(..))
 import Mousikea.Util.Ratio as Ratio
 
 

@@ -1,20 +1,9 @@
 module Mousikea.Generator exposing (bossa, randomness)
 
 import List.Extra
-import Mousikea.Music exposing (..)
+import Mousikea.Music as Music exposing (..)
 import Mousikea.PercussionSound exposing (PercussionSound(..))
-import Mousikea.Types
-    exposing
-        ( AbsPitch
-        , Dur
-        , InstrumentName(..)
-        , Music(..)
-        , Music1
-        , NoteAttribute(..)
-        , PitchClass(..)
-        , Primitive(..)
-        , Volume
-        )
+import Mousikea.Primitive exposing (Dur, Primitive(..))
 import Mousikea.Util.Ratio as Ratio
 import Random
 
@@ -82,7 +71,7 @@ percussion =
         clave =
             line [ rest qn, cl dqn, cl dqn, cl dqn, cl dqn, cl qn ]
     in
-    Par maracas clave |> mMap (\p -> ( p, 40 )) |> fromPitchVolume
+    Par maracas clave |> Music.map (\p -> ( p, 40 )) |> fromPitchVolume
 
 
 mkBossa : List LeadSheetPart -> Random.Generator MusicV
@@ -139,7 +128,7 @@ mkBossa leadSheet =
                             )
 
                 comping =
-                    Random.list 16 (withRandomDur [ qn, qn, qn, qn, qn, qn, en ] 20 (\dur _ -> voicing |> List.map (note dur) |> chord |> mMap (\p -> ( p, 25 ))))
+                    Random.list 16 (withRandomDur [ qn, qn, qn, qn, qn, qn, en ] 20 (\dur _ -> voicing |> List.map (note dur) |> chord |> Music.map (\p -> ( p, 25 ))))
                         |> Random.map (line >> instrument RhodesPiano)
 
                 rythm =

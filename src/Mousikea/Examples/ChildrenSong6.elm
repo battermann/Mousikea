@@ -1,16 +1,7 @@
 module Mousikea.Examples.ChildrenSong6 exposing (childSong6)
 
-import Mousikea.Music exposing (..)
-import Mousikea.Types
-    exposing
-        ( Dur
-        , InstrumentName(..)
-        , Music(..)
-        , Music1
-        , NoteAttribute(..)
-        , Pitch
-        , Primitive(..)
-        )
+import Mousikea.Music as Music exposing (..)
+import Mousikea.Primitive exposing (Dur, Primitive(..))
 import Mousikea.Util.Ratio exposing (add, div, divByInt, mul, mulByInt, over)
 
 
@@ -43,7 +34,7 @@ childSong6 =
     in
     instrument RhodesPiano
         (tempo t (Par bassLine mainVoice))
-        |> mMap (\p -> ( p, [ Volume 60 ] ))
+        |> Music.map (\p -> ( p, [ Volume 60 ] ))
 
 
 bassLine : Music Pitch
